@@ -1,0 +1,16 @@
+{
+  "name": "paytech-checkout",
+  "version": "1.0.0",
+  "description": "Node.js checkout system for PayTech payment processing using Mercado Pago.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node backend/server.js"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  }
+}

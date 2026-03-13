@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayTech Checkout</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="brand">
+      <img id="brandLogo" class="brand__logo" alt="Brand logo" />
+      <div>
+        <p class="brand__kicker">Pagamento seguro por</p>
+        <h1 id="brandName">PayTech Checkout</h1>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="card__body">
+        <div class="product">
+          <p class="eyebrow">Produto</p>
+          <h2 id="productName">Carregando...</h2>
+          <p id="productPrice" class="price"></p>
+        </div>
+
+        <form id="checkoutForm" class="form">
+          <div class="field">
+            <label for="customer_name">Nome completo</label>
+            <input id="customer_name" name="customer_name" placeholder="Seu nome" required />
+          </div>
+          <div class="field">
+            <label for="customer_email">Email</label>
+            <input id="customer_email" name="customer_email" type="email" placeholder="voce@email.com" required />
+          </div>
+
+          <div class="field">
+            <label>Método de pagamento</label>
+            <div class="payment-methods">
+              <label class="pill">
+                <input id="payCard" type="radio" name="payment_method" value="CARD" checked />
+                Cartão
+              </label>
+              <label class="pill">
+                <input id="payPix" type="radio" name="payment_method" value="PIX" />
+                PIX
+              </label>
+            </div>
+          </div>
+
+          <div id="card-section" class="card-fields hidden">
+            <div class="field">
+              <label>Número do cartão</label>
+              <input id="cardNumber" name="cardNumber" autocomplete="cc-number" placeholder="0000 0000 0000 0000" />
+            </div>
+            <div class="field grid-2">
+              <div>
+                <label>Validade (MM/AA)</label>
+                <input id="expirationDate" name="expirationDate" placeholder="MM/AA" autocomplete="cc-exp" />
+              </div>
+              <div>
+                <label>CVC</label>
+                <input id="securityCode" name="securityCode" placeholder="123" autocomplete="cc-csc" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Titular</label>
+              <input id="cardholderName" name="cardholderName" autocomplete="cc-name" placeholder="Nome impresso" />
+            </div>
+            <div class="field">
+              <label>Parcelas</label>
+              <select id="installments" name="installments">
+                <option value="" disabled selected>Selecione as parcelas</option>
+              </select>
+            </div>
+            <input id="transactionAmount" name="transactionAmount" type="hidden" />
+          </div>
+
+          <div id="checkoutFeedback" class="feedback hidden" role="status" aria-live="polite"></div>
+
+          <button type="submit" class="cta">Pagar agora</button>
+        </form>
+
+        <div id="pixContainer" class="pix hidden">
+          <p class="eyebrow">Pague com PIX</p>
+          <p id="pixStatus" class="pix__status">Selecione PIX e clique em "Pagar agora" para gerar o QR Code.</p>
+          <img id="pixQr" alt="QR Code PIX" />
+          <div class="copy">
+            <input id="pixCopy" readonly />
+            <button id="copyBtn" type="button">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="./checkout.js?v=20260313-23"></script>
+</body>
+</html>

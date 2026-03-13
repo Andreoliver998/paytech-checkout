@@ -1,0 +1,79 @@
+// Prisma schema for PayTech Checkout Engine
+// Run from backend: npx prisma generate --schema ../database/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../backend/node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id               String    @id @default(cuid())
+  name             String
+  email            String    @unique
+  gateway_provider String
+  gateway_account_id String
+  brand_color      String?
+  logo_url         String?
+  created_at       DateTime  @default(now())
+
+  products Product[]
+  payments Payment[]
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  client_id   String
+  name        String
+  price       Decimal       @db.Decimal(10, 2)
+  currency    String        @default("BRL")
+  redirect_url String?
+
+  client      Client        @relation(fields: [client_id], references: [id])
+  payments    Payment[]
+  paymentLink PaymentLink?
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  product_id     String
+  client_id      String
+  customer_name  String
+  customer_email String
+  amount         Decimal       @db.Decimal(10, 2)
+  status         PaymentStatus @default(PENDING)
+  payment_method PaymentMethod
+  gateway_reference String?
+  created_at     DateTime      @default(now())
+  pix_qr_code    String?
+  pix_copy_paste String?
+
+  product Product @relation(fields: [product_id], references: [id])
+  client  Client  @relation(fields: [client_id], references: [id])
+}
+
+model PaymentLink {
+  id        String  @id @default(cuid())
+  product_id String  @unique
+  slug      String  @unique
+  active    Boolean @default(true)
+
+  product Product @relation(fields: [product_id], references: [id])
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELED
+}
+
+enum PaymentMethod {
+  CARD
+  PIX
+}
