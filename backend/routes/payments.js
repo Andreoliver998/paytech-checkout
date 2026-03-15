@@ -1,8 +1,8 @@
 const express = require("express");
 const { z } = require("zod");
-const fs = require("fs");
 const path = require("path");
 const validate = require("../middlewares/validate");
+const logger = require("../utils/logger");
 const {
   createCheckoutPixPayment,
   createCheckoutCardPayment,
@@ -48,6 +48,7 @@ router.post("/create", validate(createPaymentSchema), async (req, res, next) => 
         issuerId: body.issuer_id,
         installments: body.installments,
       });
+      logger.logPayment(payment.local_payment_id, "created", { method: "CARD" });
       return res.status(201).json(payment);
     }
 
@@ -57,13 +58,17 @@ router.post("/create", validate(createPaymentSchema), async (req, res, next) => 
       customerEmail: body.email,
       amount: body.amount,
     });
+    logger.logPayment(payment.local_payment_id, "created", { method: "PIX" });
     res.status(201).json(payment);
   } catch (err) {
-    console.error("Mercado Pago create error", err.response?.data || err.message || err);
-    try {
-      fs.appendFileSync(path.join(__dirname, "..", "..", "mp-error.log"), JSON.stringify(err.response?.data || err.message || err) + "\n");
-    } catch (_) {}
-    res.status(500).json({ message: "Internal server error", detail: err.response?.data || err.message });
+    logger.error("Mercado Pago create error", {
+      message: err.message,
+      details: err.response?.data,
+    });
+    res.status(500).json({ 
+      message: "Internal server error", 
+      detail: err.response?.data || err.message 
+    });
   }
 });
 
@@ -71,9 +76,14 @@ router.get("/status/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
     const status = await syncPaymentStatusByGatewayId(id);
+    logger.logPayment(id, "status_checked", { status: status.status });
     res.json(status);
   } catch (err) {
-    console.error("Mercado Pago status error", err.response?.data || err.message);
+    logger.error("Mercado Pago status error", {
+      payment_id: req.params.id,
+      message: err.message,
+      details: err.response?.data,
+    });
     next(err);
   }
 });
