@@ -532,6 +532,7 @@ async function submitPayment() {
         customer_name: customerName,
         amount: Number(state.product.price),
         email: customerEmail,
+        paymentMethod: "pix",
       };
       const pixResp = await fetch(`${API_BASE}/api/payments/create`, {
         method: "POST",
@@ -588,6 +589,7 @@ async function submitPayment() {
       installments,
       amount: Number(state.product.price),
       email: emailForPayload,
+      paymentMethod: "card",
     };
 
     const cardResp = await fetch(`${API_BASE}/api/payments/create`, {
@@ -656,6 +658,14 @@ function resolveSuccessRedirect(redirectUrl) {
   try {
     const target = new URL(redirectUrl, window.location.origin);
     const current = new URL(window.location.origin);
+
+    // Security rule: never redirect payment success to a different domain.
+    if (target.hostname !== current.hostname) {
+      console.warn("Blocked cross-domain redirect_url, using fallback /success:", {
+        redirectUrl,
+      });
+      return fallbackSuccess;
+    }
 
     // Dev safety: if product points to old local frontend success, keep user on backend success route.
     if (

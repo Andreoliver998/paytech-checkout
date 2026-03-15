@@ -75,13 +75,17 @@ app.get("/pay", (req, res) => {
 });
 app.get("/pay/:slug", renderCheckoutPage);
 
-// Success / cancel legacy routes
+// Success / cancel / pending routes
 app.get("/success", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "frontend", "success.html"));
 });
 
 app.get("/cancel", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "frontend", "cancel.html"));
+});
+
+app.get("/pending", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "frontend", "pending.html"));
 });
 
 // Generic error handler

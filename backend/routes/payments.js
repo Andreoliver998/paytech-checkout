@@ -16,6 +16,8 @@ const pixSchema = z.object({
   customer_name: z.string().min(2),
   amount: z.coerce.number().positive(),
   email: z.string().email(),
+  paymentMethod: z.literal("pix").optional(),
+  payment_method: z.literal("PIX").optional(),
 });
 
 const cardSchema = z.object({
@@ -27,17 +29,44 @@ const cardSchema = z.object({
   payment_method_id: z.string().min(2),
   issuer_id: z.union([z.string(), z.number()]).optional().nullable(),
   installments: z.coerce.number().int().positive(),
+  paymentMethod: z.literal("card").optional(),
+  payment_method: z.literal("CARD").optional(),
 });
 
 const createPaymentSchema = z.object({
-  body: z.union([pixSchema, cardSchema]),
+  body: z.object({
+    payment_link_slug: z.string().min(1),
+    customer_name: z.string().min(2),
+    amount: z.coerce.number().positive(),
+    email: z.string().email(),
+    paymentMethod: z.enum(["pix", "card"]).optional(),
+    payment_method: z.enum(["PIX", "CARD"]).optional(),
+    token: z.string().min(5).optional(),
+    payment_method_id: z.string().min(2).optional(),
+    issuer_id: z.union([z.string(), z.number()]).optional().nullable(),
+    installments: z.coerce.number().int().positive().optional(),
+  }),
 });
 
 router.post("/create", validate(createPaymentSchema), async (req, res, next) => {
   try {
     const body = req.validated.body;
+    const explicitMethod = body.paymentMethod
+      || (body.payment_method ? String(body.payment_method).toLowerCase() : null);
+    const method = explicitMethod || (body.token ? "card" : "pix");
 
-    if (body.token) {
+    if (method === "card") {
+      const parsedCard = cardSchema.safeParse({
+        ...body,
+        paymentMethod: "card",
+      });
+      if (!parsedCard.success) {
+        return res.status(400).json({
+          message: "Invalid card payload",
+          detail: parsedCard.error.flatten(),
+        });
+      }
+
       const payment = await createCheckoutCardPayment({
         paymentLinkSlug: body.payment_link_slug,
         customerName: body.customer_name,
@@ -50,6 +79,17 @@ router.post("/create", validate(createPaymentSchema), async (req, res, next) => 
       });
       logger.logPayment(payment.local_payment_id, "created", { method: "CARD" });
       return res.status(201).json(payment);
+    }
+
+    const parsedPix = pixSchema.safeParse({
+      ...body,
+      paymentMethod: "pix",
+    });
+    if (!parsedPix.success) {
+      return res.status(400).json({
+        message: "Invalid pix payload",
+        detail: parsedPix.error.flatten(),
+      });
     }
 
     const payment = await createCheckoutPixPayment({

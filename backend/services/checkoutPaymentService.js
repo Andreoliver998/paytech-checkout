@@ -2,6 +2,16 @@ const prisma = require("../models/prisma");
 const { getActiveLink } = require("./paymentLinkService");
 const { createPixPayment, createCardPayment, fetchPaymentStatus } = require("./mercadoPagoService");
 
+function getCheckoutBaseUrl() {
+  return String(process.env.BASE_URL || "").trim().replace(/\/+$/, "");
+}
+
+function buildCheckoutReturnUrl(pathname, fallback = null) {
+  const baseUrl = getCheckoutBaseUrl();
+  if (!baseUrl) return fallback;
+  return `${baseUrl}${pathname}`;
+}
+
 function mapMpStatus(rawStatus) {
   const normalized = String(rawStatus || "").toUpperCase();
   if (["APPROVED", "PAID", "SUCCEEDED"].includes(normalized)) return "PAID";
@@ -67,7 +77,7 @@ async function createCheckoutPixPayment({ paymentLinkSlug, customerName, custome
     pix_copy_paste: mpPayment.qr_code || null,
     qr_code_base64: mpPayment.qr_code_base64 || null,
     qr_code: mpPayment.qr_code || null,
-    redirect_url: link.product.redirect_url || null,
+    redirect_url: buildCheckoutReturnUrl("/success", link.product.redirect_url || null),
     mp_response: mpPayment.raw || null,
   };
 }
@@ -122,7 +132,7 @@ async function createCheckoutCardPayment({
     payment_id: mpPayment.id,
     status: mpPayment.status,
     status_detail: mpPayment.status_detail || null,
-    redirect_url: link.product.redirect_url || null,
+    redirect_url: buildCheckoutReturnUrl("/success", link.product.redirect_url || null),
     mp_response: mpPayment,
   };
 }
