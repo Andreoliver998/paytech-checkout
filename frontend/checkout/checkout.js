@@ -11,7 +11,7 @@ const state = {
 const API_BASE = window.location.origin;
 const IS_LOCALHOST = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
-const MP_PUBLIC_KEY = window.MP_PUBLIC_KEY || null;
+let mpPublicKey = window.MP_PUBLIC_KEY || null;
 let mp = null;
 let cardForm = null;
 let lastInstallmentsBin = null;
@@ -288,7 +288,7 @@ async function loadInstallmentsByBin(bin, amount) {
   resetInstallments("Carregando parcelas...");
 
   try {
-    const url = `https://api.mercadopago.com/v1/payment_methods/installments?bin=${encodeURIComponent(bin)}&amount=${encodeURIComponent(amount)}&public_key=${encodeURIComponent(MP_PUBLIC_KEY || "")}`;
+    const url = `https://api.mercadopago.com/v1/payment_methods/installments?bin=${encodeURIComponent(bin)}&amount=${encodeURIComponent(amount)}&public_key=${encodeURIComponent(mpPublicKey || "")}`;
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`Installments API HTTP ${resp.status}`);
 
@@ -325,7 +325,7 @@ async function resolvePaymentMethodIdByBin() {
   if (bin.length < 6) return null;
 
   try {
-    const url = `https://api.mercadopago.com/v1/payment_methods?bin=${encodeURIComponent(bin)}&public_key=${encodeURIComponent(MP_PUBLIC_KEY || "")}`;
+    const url = `https://api.mercadopago.com/v1/payment_methods?bin=${encodeURIComponent(bin)}&public_key=${encodeURIComponent(mpPublicKey || "")}`;
     const resp = await fetch(url);
     if (!resp.ok) return null;
     const data = await resp.json();
@@ -488,7 +488,7 @@ async function ensureMercadoPagoSdk() {
   if (mp) return true;
   if (typeof window.MercadoPago !== "function") return false;
 
-  let key = MP_PUBLIC_KEY;
+  let key = mpPublicKey;
   if (!key) {
     try {
       const resp = await fetch("/api/config/public-keys", { cache: "no-store" });
@@ -503,6 +503,7 @@ async function ensureMercadoPagoSdk() {
     return false;
   }
 
+  mpPublicKey = key;
   mp = new window.MercadoPago(key);
   return true;
 }
