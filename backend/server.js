@@ -10,7 +10,7 @@ dotenv.config({ path: path.join(__dirname, "..", ".env"), override: true });
 
 const corsConfig = require("./config/cors");
 const apiRoutes = require("./routes/api");
-const webhookRoutes = require("./webhooks/webhooks");
+const webhookRoutes = require("./routes/webhooks");
 const paymentRoutes = require("./routes/payments");
 const { renderCheckoutPage } = require("./controllers/checkoutController");
 

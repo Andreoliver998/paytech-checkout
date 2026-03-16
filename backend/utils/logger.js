@@ -94,7 +94,7 @@ const logger = {
    * Log webhook event
    */
   logWebhook: (event, status, data) => {
-    const level = status === 200 ? "INFO" : "WARN";
+    const level = status === 200 ? "info" : "warn";
     logger[level](
       `Webhook ${event}`,
       { status, ...data }
